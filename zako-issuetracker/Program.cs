@@ -170,10 +170,24 @@ class Program
             switch (slashCommand.Data.Name)
             {
                 case "issue":
-                    await slashCommand.RespondAsync("test", ephemeral: true);
+                    var subCommand = slashCommand.Data.Options.First().Name;
+                    switch (subCommand)
+                    {
+                        case "new":
+                            return;
+                        case "status":
+                            return;
+                        case "list":
+                            return;
+                        case "export":
+                            return;
+                        default:
+                            await slashCommand.RespondAsync("Unknown command");
+                            break;
+                    }
                     break;
                 default:
-                    await slashCommand.RespondAsync("undfined command");
+                    await slashCommand.RespondAsync("Unkown command");
                     break;
             }
         }
