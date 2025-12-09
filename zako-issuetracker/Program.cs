@@ -162,9 +162,6 @@ class Program
             {
                 case "ISSUE_MODAL":
                 {
-                    var s = modal.Data.Components.First(
-                        x => x.CustomId == "issue_title")?.Value ?? "-";
-
                     var c = modal.Data.Components.ToArray();
                     object[] values = new object[c.Length];
                     for (int i = 0; i < c.Length; i++)
@@ -205,12 +202,10 @@ class Program
                     switch (subCommand)
                     {
                         case "new":
-                            
                             var inModal = new ModalBuilder()
                                 .WithTitle("새 이슈")
                                 .WithCustomId("ISSUE_MODAL")
                                 .AddTextInput("이슈 이름", "issue_title", placeholder:"이슈 이름을 입력하세요", required:true)
-                                //.AddComponents(new List<IMessageComponent>{tagSel}, 1)
                                 .AddSelectMenu("이슈 태그", "issue_tag", options:new List<SelectMenuOptionBuilder>
                                 {
                                     new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug").WithDescription("오류가 발생했어요!")
