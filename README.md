@@ -1,6 +1,9 @@
 # zako-issuetracker
 Zako IssueTracker ♥ for minco
 
+## plans
+
+
 ## 이슈의 구성 요소
 - ID (1부터 쭈르륵 증가)
 - 이름
