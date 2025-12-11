@@ -290,15 +290,17 @@ class Program
                                 tag = Enum.Parse<IssueTag>(tagStr, true);
                             
                             Dictionary<int, Issue.IssueContent> dict = Issue.IssueData.ListOfIssue(tag);
-                            
-                            Dictionary<int, Issue.IssueContent> _dict
-                                = Issue.IssueData.ListOfIssue(tag);
+
+                            if (dict.Count > 25)
+                            {
+                                
+                            }
                             
                             var eb = new EmbedBuilder()
                                 .WithTitle($"이슈 목록 - Tag: {tag}")
                                 .WithColor(Color.Blue)
                                 .WithCurrentTimestamp();
-                            foreach (var ctx in _dict)
+                            foreach (var ctx in dict)
                             {
                                 eb.AddField($"Id : {ctx.Key.ToString()}",
                                     $"Name: {ctx.Value.Name}\n" +
