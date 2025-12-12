@@ -11,6 +11,16 @@ public struct IssueContent
     public string UserId;
 }
 
+public class IssueJsonContent
+{
+    public int Id;
+    public string Name;
+    public string Detail;
+    public IssueTag Tag;
+    public IssueStatus Status;
+    public string UserId;
+}
+
 public class IssueData
 {
     static Dictionary<int, IssueContent> _dict = new Dictionary<int, IssueContent>();

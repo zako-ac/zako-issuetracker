@@ -3,7 +3,9 @@ using Discord;
 //using Discord.Interactions.Builders;
 using Discord.WebSocket;
 using Color = Discord.Color;
-
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using zako_issuetracker.Issue;
 
 namespace zako_issuetracker;
 
@@ -340,6 +342,41 @@ class Program
                         }
                             break;
                         case "export":
+                        {
+                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value?.ToString();
+                            IssueTag? tag = null;
+                            if (!string.IsNullOrEmpty(tagStr))
+                                tag = Enum.Parse<IssueTag>(tagStr, true);
+                            var dict = Issue.IssueData.ListOfIssue(tag);
+
+                            var jsonList = new List<Issue.IssueJsonContent>(dict.Count);
+                            // {{id, name, detail, tag, status, userid},{id, name, detail, tag, status, userid}, ....}
+                            foreach (var ctx in dict)
+                            {
+                                jsonList.Add(new IssueJsonContent()
+                                {
+                                    Id = ctx.Key,
+                                    Name = ctx.Value.Name,
+                                    Detail = ctx.Value.Detail,
+                                    Tag = ctx.Value.Tag,
+                                    Status = ctx.Value.Status,
+                                    UserId = ctx.Value.UserId
+                                });
+                            }
+
+                            var options = new JsonSerializerOptions
+                            {
+                                WriteIndented = true,IncludeFields = true,
+                                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                                Converters = { new JsonStringEnumConverter() }
+                            };
+                            string finalJson = JsonSerializer.Serialize(jsonList, options);
+                            
+                            string msg = "```json\n" + finalJson + "\n```";
+                            //Console.WriteLine(msg);
+                            
+                            await slashCommand.RespondAsync(msg, ephemeral: true);
+                        }
                             break;
                         case "get":
                         {
