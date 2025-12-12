@@ -3,7 +3,9 @@ using Discord;
 //using Discord.Interactions.Builders;
 using Discord.WebSocket;
 using Color = Discord.Color;
-
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using zako_issuetracker.Issue;
 
 namespace zako_issuetracker;
 
@@ -145,8 +147,51 @@ class Program
             // Check for the ID created in the button mentioned above.
             if (component.Data.CustomId == "unique-id")
                 await interaction.RespondAsync("Thank you for clicking my button!");
+            else if (component.Data.CustomId == "issue-previous")
+            {
+                int currentPage = int.Parse(component.Message.Embeds.First().Title.Split().Last());
+                IssueTag? tag;
+                if (component.Message.Embeds.First().Description.Split().Last() != "All")
+                    tag = Enum.Parse<IssueTag>(component.Message.Embeds.First().Description.Split().Last(), true);
+                else
+                    tag = null;
+                
+                
+                
+                if (currentPage <= 1)
+                {
+                    await component.RespondAsync("This is the first page!", ephemeral: true);
+                    return;
+                }
+                await component.UpdateAsync(msg =>
+                    { 
+                        Dictionary<int, Issue.IssueContent> dict = Issue.IssueData.ListOfIssue(tag); 
+                        msg.Embed = commands.IssueListEmbed.BuildIssueListEmbed(dict,--currentPage, tag).Build();
+                    });
 
-            else
+            }else if (component.Data.CustomId == "issue-next")
+            {
+                int currentPage = int.Parse(component.Message.Embeds.First().Title.Split().Last());
+
+                IssueTag? tag;
+                if (component.Message.Embeds.First().Description.Split().Last() != "All")
+                    tag = Enum.Parse<IssueTag>(component.Message.Embeds.First().Description.Split().Last(), true);
+                else
+                    tag = null;
+                
+                Dictionary<int, Issue.IssueContent> dict = Issue.IssueData.ListOfIssue(tag);
+                int maxPage = (int)Math.Ceiling((double)dict.Count / 10);
+                if (currentPage >= maxPage)
+                {
+                    await component.RespondAsync("This is the last page!", ephemeral: true);
+                    return;
+                }
+
+                await component.UpdateAsync(msg =>
+                {
+                    msg.Embed = commands.IssueListEmbed.BuildIssueListEmbed(dict, ++currentPage, tag).Build();
+                });
+            }else
                 Console.WriteLine("An ID has been received that has no handler!");
         }
 
@@ -290,30 +335,48 @@ class Program
                                 tag = Enum.Parse<IssueTag>(tagStr, true);
                             
                             Dictionary<int, Issue.IssueContent> dict = Issue.IssueData.ListOfIssue(tag);
-
-                            if (dict.Count > 25)
-                            {
-                                
-                            }
                             
-                            var eb = new EmbedBuilder()
-                                .WithTitle($"이슈 목록 - Tag: {tag}")
-                                .WithColor(Color.Blue)
-                                .WithCurrentTimestamp();
-                            foreach (var ctx in dict)
-                            {
-                                eb.AddField($"Id : {ctx.Key.ToString()}",
-                                    $"Name: {ctx.Value.Name}\n" +
-                                    $"Detail: {ctx.Value.Detail}\n" +
-                                    $"Tag: {ctx.Value.Tag}\n" +
-                                    $"Status: {ctx.Value.Status}\n" +
-                                    $"User: <@{ctx.Value.UserId}>\n");
-                            }
-                            
-                            await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
+                            await slashCommand.RespondAsync
+                                (embed: commands.IssueListEmbed.BuildIssueListEmbed(dict,1 , tag).Build(),
+                                    components: components.Pages.Button().Build(), ephemeral: true);
                         }
                             break;
                         case "export":
+                        {
+                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value?.ToString();
+                            IssueTag? tag = null;
+                            if (!string.IsNullOrEmpty(tagStr))
+                                tag = Enum.Parse<IssueTag>(tagStr, true);
+                            var dict = Issue.IssueData.ListOfIssue(tag);
+
+                            var jsonList = new List<Issue.IssueJsonContent>(dict.Count);
+                            // {{id, name, detail, tag, status, userid},{id, name, detail, tag, status, userid}, ....}
+                            foreach (var ctx in dict)
+                            {
+                                jsonList.Add(new IssueJsonContent()
+                                {
+                                    Id = ctx.Key,
+                                    Name = ctx.Value.Name,
+                                    Detail = ctx.Value.Detail,
+                                    Tag = ctx.Value.Tag,
+                                    Status = ctx.Value.Status,
+                                    UserId = ctx.Value.UserId
+                                });
+                            }
+
+                            var options = new JsonSerializerOptions
+                            {
+                                WriteIndented = true,IncludeFields = true,
+                                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                                Converters = { new JsonStringEnumConverter() }
+                            };
+                            string finalJson = JsonSerializer.Serialize(jsonList, options);
+                            
+                            string msg = "```json\n" + finalJson + "\n```";
+                            //Console.WriteLine(msg);
+                            
+                            await slashCommand.RespondAsync(msg, ephemeral: true);
+                        }
                             break;
                         case "get":
                         {
