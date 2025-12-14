@@ -124,8 +124,7 @@ internal static class DataBaseHelper
 {
     public static string dbPath
     {
-        get
-        {
+        get {
             return EnvLoader.GetSqlitePath() ?? throw new ArgumentNullException();
         } 
     } 

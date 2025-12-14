@@ -250,7 +250,7 @@ class Program
                 }   
                     break;
                 default:
-                    await modal.RespondAsync("undfined command");
+                    //await modal.RespondAsync("undfined command");
                     break;
             }
         }
@@ -280,7 +280,7 @@ class Program
                             break;
                         case "status":
                         {
-                            if (slashCommand.User.Id != 700624937236561950 && slashCommand.User.Id != 781088270830141441)
+                            if (slashCommand.User.Id != 700624937236561950)
                             {
                                 var eb = new EmbedBuilder()
                                     .WithTitle("안돼")
@@ -414,7 +414,7 @@ class Program
                         }
                             break;
                         default:
-                            await slashCommand.RespondAsync("Unknown command");
+                            //await slashCommand.RespondAsync("Unknown command");
                             break;
                     }
                     break;
