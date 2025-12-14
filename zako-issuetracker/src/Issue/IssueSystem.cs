@@ -120,9 +120,13 @@ public class IssueData
     }
 }
 
-internal class DataBaseHelper
+internal static class DataBaseHelper
 {
-    public const string dbPath = "db.sqlite";
-    
-    
+    public static string dbPath
+    {
+        get
+        {
+            return EnvLoader.GetSqlitePath() ?? throw new ArgumentNullException();
+        } 
+    } 
 }
