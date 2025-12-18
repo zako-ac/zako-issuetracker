@@ -38,7 +38,13 @@ class Program
         _client.Ready += ReadyAsync;
         _client.MessageReceived += MessageReceivedAsync;
         _client.InteractionCreated += InteractionCreatedAsync;
-     
+
+        var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
+        con.Open();
+        var cmd = con.CreateCommand();
+        cmd.CommandText = "CREATE TABLE IF NOT EXISTS zako(tag int, status int, name text, detail text, discord text)";
+        cmd.ExecuteNonQuery();
+        con.Close();
         
         await _client.LoginAsync(TokenType.Bot, botToken); //or, read from console
         
