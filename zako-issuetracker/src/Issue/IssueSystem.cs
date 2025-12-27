@@ -165,6 +165,8 @@ public class IssueData
         }
     }
 
+    
+    #region ["Obsolete Sync Wrappers"]
     [Obsolete("Use StoreIssueAsync instead")]
     public static bool StoreIssue(string? name, string? detail, IssueTag? tag, string userId)
         => StoreIssueAsync(name, detail, tag, userId).GetAwaiter().GetResult();
@@ -180,6 +182,8 @@ public class IssueData
     [Obsolete("Use GetIssueByIdAsync instead")]
     public static IssueContent? GetIssueById(int? issueId)
         => GetIssueByIdAsync(issueId).GetAwaiter().GetResult();
+    
+    #endregion
 }
 
 internal static class DataBaseHelper
