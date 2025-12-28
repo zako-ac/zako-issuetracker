@@ -166,9 +166,7 @@ class Program
         if (interaction is SocketMessageComponent component)
         {
             // Check for the ID created in the button mentioned above.
-            if (component.Data.CustomId == "unique-id")
-                await interaction.RespondAsync("버튼을 클릭해주셔서 감사합니다!");
-            else if (component.Data.CustomId == "issue-previous")
+            if (component.Data.CustomId == "issue-previous")
             {
                 int currentPage = int.Parse(component.Message.Embeds.First().Title.Split().Last());
                 IssueTag? tag;
@@ -179,7 +177,7 @@ class Program
                 
                 if (currentPage <= 1)
                 {
-                    await component.RespondAsync("첫 페이지입니다!", ephemeral: false);
+                    await component.RespondAsync("첫 페이지입니다!", ephemeral: true);
                     return;
                 }
                 
@@ -203,7 +201,7 @@ class Program
                 int maxPage = (int)Math.Ceiling((double)dict.Count / 10);
                 if (currentPage >= maxPage)
                 {
-                    await component.RespondAsync("마지막 페이지입니다!", ephemeral: false);
+                    await component.RespondAsync("마지막 페이지입니다!", ephemeral: true);
                     return;
                 }
 
