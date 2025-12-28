@@ -72,7 +72,7 @@ public class IssueData
         }
     }
 
-    public static async Task<Dictionary<int, IssueContent>> ListOfIssueAsync(IssueTag? tag, IssueStatus? status = null)
+    public static async Task<Dictionary<int, IssueContent>> ListOfIssueAsync(IssueTag? tag = null, IssueStatus? status = null)
     {
         string cTag = tag?.ToString() ?? "%";
         string cStatus = status?.ToString() ?? "%";

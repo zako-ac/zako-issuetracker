@@ -184,7 +184,7 @@ class Program
                 Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
                 await component.UpdateAsync(msg =>
                     { 
-                        msg.Embed = commands.IssueListEmbed.BuildIssueListEmbed(dict,--currentPage, tag).Build();
+                        msg.Embeds = commands.IssueListEmbed.BuildIssueListEmbed(dict,--currentPage, tag);
                     });
 
             }else if (component.Data.CustomId == "issue-next")
@@ -207,7 +207,7 @@ class Program
 
                 await component.UpdateAsync(msg =>
                 {
-                    msg.Embed = commands.IssueListEmbed.BuildIssueListEmbed(dict, ++currentPage, tag).Build();
+                    msg.Embeds = commands.IssueListEmbed.BuildIssueListEmbed(dict, ++currentPage, tag);
                 });
             }else
                 Console.WriteLine("An ID has been received that has no handler!");
@@ -356,10 +356,16 @@ class Program
                             if (!string.IsNullOrEmpty(tagStr))
                                 tag = Enum.Parse<IssueTag>(tagStr, true);
                             
+                            string? statusSTr = slashCommand.Data.Options.First().Options
+                                .FirstOrDefault(o => o.Name == "status")?.Value?.ToString();
+                            IssueStatus? status = null;
+                            if (!string.IsNullOrEmpty(statusSTr))
+                                status = Enum.Parse<IssueStatus>(statusSTr, true);
+                            
                             Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
                             
                             await slashCommand.RespondAsync
-                                (embed: commands.IssueListEmbed.BuildIssueListEmbed(dict,1 , tag).Build(),
+                                (embeds: commands.IssueListEmbed.BuildIssueListEmbed(dict,1 , tag, status),
                                     components: components.Pages.Button().Build(), ephemeral: false);
                         }
                             break;
