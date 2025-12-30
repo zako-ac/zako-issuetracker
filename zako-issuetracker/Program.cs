@@ -126,8 +126,7 @@ class Program
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.Integer))
                 .AddOption(issueStatusChoices.WithName("change-to").WithRequired(true))
-                .WithType(ApplicationCommandOptionType.SubCommand)
-            )
+                .WithType(ApplicationCommandOptionType.SubCommand))
             // list
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("list")
@@ -147,7 +146,8 @@ class Program
                     .WithName("id")
                     .WithDescription("이슈 ID")
                     .WithRequired(true)
-                    .WithType(ApplicationCommandOptionType.Integer)))
+                    .WithType(ApplicationCommandOptionType.Integer))
+                .WithType(ApplicationCommandOptionType.SubCommand))
             .Build();
 
         var ping = new SlashCommandBuilder()
