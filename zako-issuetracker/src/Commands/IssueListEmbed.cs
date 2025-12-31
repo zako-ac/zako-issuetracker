@@ -12,12 +12,9 @@ public static class IssueListEmbed
         string sTag = tag?.ToString() ?? "All";
         string sStatus = status?.ToString() ?? "All";
         
-        
-        
+        var embeds = new List<Embed>();
         
         var appearedIssues = dict.OrderBy(kv => kv.Key).Skip((page -1) * PageSize).Take(PageSize);
-
-        var embeds = new List<Embed>();
         
         foreach (var ctx in appearedIssues)
         {
