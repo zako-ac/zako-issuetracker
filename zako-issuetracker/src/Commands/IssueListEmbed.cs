@@ -21,9 +21,6 @@ public static class IssueListEmbed
         
         foreach (var ctx in appearedIssues)
         {
-            var id = ctx.Key;
-            var content = ctx.Value;
-            
             
             var eb = new EmbedBuilder()
                 .WithTitle($"Issue List - Page {page}")
