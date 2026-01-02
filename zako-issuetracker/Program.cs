@@ -46,7 +46,7 @@ class Program
         var cmd = con.CreateCommand();
         cmd.CommandText = "CREATE TABLE IF NOT EXISTS zako(id INTEGER PRIMARY KEY AUTOINCREMENT, tag INTEGER NOT NULL, status INTEGER NOT NULL, name TEXT NOT NULL, detail text NOT NULL, discord text NOT NULL)";
         cmd.ExecuteNonQuery();
-        cmd.CommandText = "CREATE TABLE IF NOT EXISTS zakonim(id TEXT NOT NULL, description TEXT NOT NULL)";
+        cmd.CommandText = "CREATE TABLE IF NOT EXISTS zakonim(id TEXT PRIMARY KEY NOT NULL, description TEXT NOT NULL)";
         cmd.ExecuteNonQuery();
         con.Close();
         
@@ -293,7 +293,7 @@ class Program
                 }   
                     break;
                 default:
-                    //await modal.RespondAsync("Undefined command");
+                    await modal.RespondAsync("Undefined command", ephemeral:true);
                     break;
             }
         }
@@ -504,35 +504,53 @@ class Program
                     await slashCommand.RespondAsync($"Pong! {_client.Latency}");
                     break;
                 case "zakonim":
-                {   SocketUser who = (SocketUser?)slashCommand.Data.Options.First(o => o.Name == "who").Value;
+                {
+                    SocketUser who = (SocketUser)slashCommand.Data.Options.First(o => o.Name == "who").Value;
                     string description = slashCommand.Data.Options.First(o => o.Name == "description").Value.ToString() ?? "No description";
-                    
+
                     var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
                     con.Open();
                     var cmd = con.CreateCommand();
-                    cmd.CommandText = "INSERT INTO zakonim (id, description) VALUES (@id, @description)";
-                    cmd.Parameters.AddWithValue("@id", who.Id.ToString());
-                    cmd.Parameters.AddWithValue("@description", description);
-                    await cmd.ExecuteNonQueryAsync();
-                    
-                    
-                    //string whoName = who.GlobalName.ToString();
-                    
-                    
-                    cmd.CommandText = "SELECT COUNT(*) FROM zakonim";
-                    var reader = await cmd.ExecuteReaderAsync();
-                    int count = 0;
-                    if (await reader.ReadAsync())
+                    try
                     {
-                        count = reader.GetInt32(0);
+                        cmd.CommandText = "INSERT INTO zakonim (id, description) VALUES (@id, @description)";
+                        cmd.Parameters.AddWithValue("@id", who.Id.ToString());
+                        cmd.Parameters.AddWithValue("@description", description);
+                        await cmd.ExecuteNonQueryAsync();
+                        
+                        cmd.CommandText = "SELECT COUNT(*) FROM zakonim";
+                        var reader = await cmd.ExecuteReaderAsync();
+                        con.Close();
+                        int count = 0;
+                        if (await reader.ReadAsync())
+                        {
+                            count = reader.GetInt32(0);
+                        }
+                        var eb = new EmbedBuilder()
+                            .WithTitle("당신은 허접입니다")
+                            .WithDescription($"자코님 DB에 {who.Mention} 사용자 등록 완료!")
+                            .AddField("설명", description)
+                            .AddField("지금까지 자코님을 부른 사람", $"{count}명");
+                        await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
                     }
-                    con.Close();
-                    var eb = new EmbedBuilder()
-                        .WithTitle("당신은 허접입니다")
-                        .WithDescription($"자코님 DB에 {who.Mention} 사용자 등록 완료!")
-                        .AddField("설명", description)
-                        .AddField("지금까지 자코님을 부른 사람", $"{count}명");
-                    await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                    catch (SqliteException e)
+                    {
+                        int code = e.SqliteErrorCode;
+
+                        Console.WriteLine(e);
+                    }
+                    catch (Exception e)
+                    {
+                        var eb = new EmbedBuilder();
+                        
+                        await slashCommand.RespondAsync(embed:eb.Build(), ephemeral: true);
+                        
+                        Console.WriteLine(e);
+                    }
+                    finally
+                    {
+                        con.Close();
+                    }
                 }
                     break;
                 default:
