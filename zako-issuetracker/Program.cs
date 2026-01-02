@@ -508,7 +508,7 @@ class Program
                     SocketUser who = (SocketUser)slashCommand.Data.Options.First(o => o.Name == "who").Value;
                     string description = slashCommand.Data.Options.First(o => o.Name == "description").Value.ToString() ?? "No description";
 
-                    var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
+                    using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
                     con.Open();
                     var cmd = con.CreateCommand();
                     try
@@ -519,8 +519,8 @@ class Program
                         await cmd.ExecuteNonQueryAsync();
                         
                         cmd.CommandText = "SELECT COUNT(*) FROM zakonim";
-                        var reader = await cmd.ExecuteReaderAsync();
-                        con.Close();
+                        await using var reader = await cmd.ExecuteReaderAsync();
+                        
                         int count = 0;
                         if (await reader.ReadAsync())
                         {
@@ -536,12 +536,37 @@ class Program
                     catch (SqliteException e)
                     {
                         int code = e.SqliteErrorCode;
-
+                        
+                        var eb = new EmbedBuilder();
+                        if(code == 19) // UNIQUE constraint failed
+                        {
+                            eb = new EmbedBuilder()
+                                .WithTitle("이미 허접입니다")
+                                .WithDescription($"{who.Mention}님은 이미 자코님 DB에 등록되어 있습니다.")
+                                .WithColor(Color.Orange)
+                                .WithCurrentTimestamp();
+                            await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
+                            break;
+                        }
+                        else
+                        {
+                            eb = new EmbedBuilder()
+                                .WithTitle("??")
+                                .WithDescription("오류남")
+                                .WithColor(Color.DarkRed)
+                                .WithCurrentTimestamp();
+                            await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                        }
+                        
                         Console.WriteLine(e);
                     }
                     catch (Exception e)
                     {
-                        var eb = new EmbedBuilder();
+                        var eb = new EmbedBuilder()
+                            .WithTitle("???")
+                            .WithDescription("오류남")
+                            .WithColor(Color.Red)
+                            .WithCurrentTimestamp();
                         
                         await slashCommand.RespondAsync(embed:eb.Build(), ephemeral: true);
                         
