@@ -387,6 +387,18 @@ class Program
                                 status = Enum.Parse<IssueStatus>(statusStr, true);
                             
                             Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
+
+                            if (dict.Count == 0)
+                            {
+                                var eb = new EmbedBuilder()
+                                    .WithTitle("없어요 없어요")
+                                    .WithDescription("이슈가 없어요")
+                                    .WithImageUrl(EnvLoader.GetImgLink())
+                                    .WithColor(Color.Red)
+                                    .WithCurrentTimestamp();
+                                await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
+                                break;
+                            }
                             
                             await slashCommand.RespondAsync
                                 (embeds: commands.IssueListEmbed.BuildIssueListEmbed(dict,1 , tag, status),
