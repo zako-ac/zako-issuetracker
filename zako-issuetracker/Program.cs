@@ -141,12 +141,12 @@ class Program
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.Integer))
                 .WithType(ApplicationCommandOptionType.SubCommand))
-            .Build();
+            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
 
         var ping = new SlashCommandBuilder()
             .WithName("ping")
             .WithDescription("Pong!")
-            .Build();
+            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
 
         var zakonim = new SlashCommandBuilder()
             .WithName("zakonim")
@@ -166,11 +166,15 @@ class Program
                 .WithNameLocalizations(new Dictionary<string, string>{{"ko", "설명"}})
                 .WithRequired(true)
                 .WithType(ApplicationCommandOptionType.String))
-            .Build();
+            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
         
         await _client.CreateGlobalApplicationCommandAsync(newIssue);
         await _client.CreateGlobalApplicationCommandAsync(ping);
         await _client.CreateGlobalApplicationCommandAsync(zakonim);
+        
+        
+        
+        
     }
     
     private static async Task MessageReceivedAsync(SocketMessage message)
