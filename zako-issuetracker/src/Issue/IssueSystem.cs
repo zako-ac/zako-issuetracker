@@ -168,7 +168,7 @@ public class IssueData
         }
     }
 
-    public static async Task<bool> UpdateIssueAsync()
+    public static async Task<bool> UpdateIssueAsync(IssueContent issueContent)
     {
         return true;
     }

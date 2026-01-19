@@ -26,17 +26,18 @@ partial class Program
             .WithDescription("이슈 상태 선택")
             .WithRequired(true)
             .WithType(ApplicationCommandOptionType.String);
-
-        foreach (var status in Enum.GetNames(typeof(IssueStatus)))
-        {
-            issueStatusChoices.AddChoice(status, status.ToLowerInvariant());
-        }
         
         var issueStatusFilterChoices = new SlashCommandOptionBuilder()
             .WithName("status")
             .WithDescription("이슈 상태 필터")
             .WithRequired(false)
             .WithType(ApplicationCommandOptionType.String);
+
+        foreach (var status in Enum.GetNames(typeof(IssueStatus)))
+        {
+            issueStatusChoices.AddChoice(status, status.ToLowerInvariant());
+            issueStatusFilterChoices.AddChoice(status, status.ToLowerInvariant());
+        }
 
         var newIssue = new SlashCommandBuilder()
             .WithName("issue")

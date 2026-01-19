@@ -171,7 +171,40 @@ partial class Program
                     break;
                 case "ISSUE_MODAL_EDIT":
                 {
+                    IssueContent Content = new IssueContent();
                     
+                    var c = modal.Data.Components.ToArray();
+                    object[] values = new object[c.Length];
+                    for (int i = 0; i < c.Length; i++)
+                        values[i] = c[i].Value ?? "NULL";
+
+                    values[1] = c[1].Values.First();
+                    //Console.WriteLine($"values[1] = {values[1]}");
+
+                    string userId = modal.User.Id.ToString();
+                    
+                    var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록헀습니다.")
+                        .AddField("이슈 이름", values[0])
+                        .AddField("이슈 태그", values[1])
+                        .AddField("이슈 설명", values[2])
+                        .WithColor(Color.Blue)
+                        .WithCurrentTimestamp()
+                        .Build();
+                    bool result;
+                    
+                    
+                    
+                    try
+                    {
+                        Content = Issue.IssueData.GetIssueByIdAsync();
+                        
+                        result = await Issue.IssueData.UpdateIssueAsync(Content);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
                     
                     break;
                 }
@@ -427,9 +460,10 @@ partial class Program
                             };
 
                             var eModal = new ModalBuilder()
-                                .WithTitle("새 이슈")
+                                .WithTitle("이슈 수정 #" + inputId)
                                 .WithCustomId("ISSUE_MODAL_EDIT")
                                 .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,placeholder: "이슈 이름을 입력하세요", required: true)
+                                //.AddTextInput("이슈 Id", "issue_id", value: inputId.ToString(), required: true)
                                 .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
                                 {
                                     new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")
