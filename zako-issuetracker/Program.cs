@@ -171,6 +171,9 @@ partial class Program
                     break;
                 case "ISSUE_MODAL_EDIT":
                 {
+                    await modal.RespondAsync("안 돼.", ephemeral: true);
+                    break;
+                    
                     IssueContent Content = new IssueContent();
                     
                     var c = modal.Data.Components.ToArray();
@@ -196,7 +199,7 @@ partial class Program
                     
                     try
                     {
-                        Content = Issue.IssueData.GetIssueByIdAsync();
+                        //Content = Issue.IssueData.GetIssueByIdAsync();
                         
                         result = await Issue.IssueData.UpdateIssueAsync(Content);
                     }
