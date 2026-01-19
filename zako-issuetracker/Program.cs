@@ -15,8 +15,8 @@ public enum IssueTag
 
 public enum IssueStatus
 {
-    Proposed, Approved, Rejected, Deleted
-    // 0, 1, 2, 3
+    Proposed, Approved, Rejected, Deleted, InProgress, Completed
+    // 0, 1, 2, 3, 4, 5
 }
 class Program
 {
