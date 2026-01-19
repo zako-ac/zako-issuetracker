@@ -9,6 +9,8 @@ partial class Program
         Console.WriteLine($"{_client.CurrentUser} is connected!");
 
         _client.SetActivityAsync(new Game("이슈 수집 중..."));
+        
+        #region [SlashCommands]
 
         var issueTagChoices = new SlashCommandOptionBuilder()
             .WithName("tags")
@@ -89,6 +91,14 @@ partial class Program
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.Integer))
                 .WithType(ApplicationCommandOptionType.SubCommand))
+            .AddOption(new SlashCommandOptionBuilder()
+                .WithName("edit")
+                .WithDescription("이슈 수정")
+                .AddOption(new SlashCommandOptionBuilder()
+                    .WithName("id").WithDescription("이슈ID")
+                    .WithRequired(true)
+                    .WithType(ApplicationCommandOptionType.Integer))
+                .WithType(ApplicationCommandOptionType.SubCommand))
             .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
 
         var ping = new SlashCommandBuilder()
@@ -120,8 +130,6 @@ partial class Program
         await _client.CreateGlobalApplicationCommandAsync(ping);
         await _client.CreateGlobalApplicationCommandAsync(zakonim);
         
-        
-        
-        
+        #endregion
     }
 }

@@ -55,7 +55,6 @@ partial class Program
         Console.WriteLine(log.ToString());
         return Task.CompletedTask;
     }
-
     
     
     private static async Task MessageReceivedAsync(SocketMessage message)
@@ -170,6 +169,12 @@ partial class Program
                     }
                 }   
                     break;
+                case "ISSUE_MODAL_EDIT":
+                {
+                    
+                    
+                    break;
+                }
                 default:
                     await modal.RespondAsync("Undefined command", ephemeral:true);
                     break;
@@ -180,7 +185,7 @@ partial class Program
         {
             switch (slashCommand.Data.Name)
             {
-                case "issue":
+                case "issue": 
                     var subCommand = slashCommand.Data.Options.First().Name;
                     switch (subCommand)
                     {
@@ -385,6 +390,61 @@ partial class Program
                             }
                         }
                             break;
+                        case "edit":
+                        {
+                            int inputId = (int)slashCommand.Data.Options.First(o => o.Name == "id").Value;
+                            var result = Issue.IssueData.GetIssueByIdAsync(inputId).Result;
+                            
+                            // modification permission check
+                            if (result == null || result.Value.Status == IssueStatus.Deleted)
+                            {
+                                var eb = new EmbedBuilder()
+                                    .WithTitle("오류가 발생했습니다")
+                                    .WithDescription("해당 이슈가 없던지 지워졌던지")
+                                    .WithColor(Color.Red)
+                                    .WithCurrentTimestamp();
+                                await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                                break;
+                            }
+
+                            if (result.Value.Status.ToString() != slashCommand.User.Id.ToString()
+                                && !AdminTool.IsAdmin(slashCommand.User.Id.ToString()))
+                            {
+                                var eb = new EmbedBuilder()
+                                    .WithTitle("오류가 발생했습니다")
+                                    .WithDescription("남의 것을 탐하지 마라")
+                                    .WithColor(Color.Red)
+                                    .WithCurrentTimestamp();
+                                await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                                break;
+                            }
+
+                            string defaultTag = result.Value.Tag switch
+                            {
+                                IssueTag.Bug => "bug",
+                                IssueTag.Feature => "feature",
+                                IssueTag.Enhancement => "enhancement"
+                            };
+
+                            var eModal = new ModalBuilder()
+                                .WithTitle("새 이슈")
+                                .WithCustomId("ISSUE_MODAL_EDIT")
+                                .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,placeholder: "이슈 이름을 입력하세요", required: true)
+                                .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
+                                {
+                                    new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")
+                                        .WithDescription("오류가 발생했어요!").WithDefault(defaultTag == "bug"),
+                                    new SelectMenuOptionBuilder().WithLabel("Feature").WithValue("feature")
+                                        .WithDescription("새로운 기능을 제안해요!").WithDefault(defaultTag == "feature"),
+                                    new SelectMenuOptionBuilder().WithLabel("Enhancement").WithValue("enhancement")
+                                        .WithDescription("기존 기능을 개선해요!").WithDefault(defaultTag == "enhancement")
+                                } ,required: true)
+                                .AddTextInput("이슈 설명", "issue_detail",value: result.Value.Detail, placeholder: "이슈 설명을 입력하세요", required: true,
+                                    style: TextInputStyle.Paragraph);
+
+                            await slashCommand.RespondWithModalAsync(eModal.Build());
+                            break;
+                        }
                         default:
                             //await slashCommand.RespondAsync("Unknown command");
                             break;
