@@ -1,3 +1,1 @@
-- [ ] Add Issue deletion: Admin can delete issue
-- [ ] Add Issue status filter on `/issue list`: Filter issue list by its status
-- [ ] Rename `/issue status` to `/issue set-status`
+****
