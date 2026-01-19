@@ -167,6 +167,11 @@ public class IssueData
             return false;
         }
     }
+
+    public static async Task<bool> UpdateIssueAsync(IssueContent issueContent)
+    {
+        return true;
+    }
     
     #region ["Obsolete Sync Wrappers"]
     [Obsolete("Use StoreIssueAsync instead")]

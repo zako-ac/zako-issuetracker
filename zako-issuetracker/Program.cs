@@ -18,7 +18,7 @@ public enum IssueStatus
     Proposed, Approved, Rejected, Deleted, InProgress, Completed
     // 0, 1, 2, 3, 4, 5
 }
-class Program
+partial class Program
 {
     private static DiscordSocketClient _client;
 
@@ -55,129 +55,7 @@ class Program
         Console.WriteLine(log.ToString());
         return Task.CompletedTask;
     }
-
-    private static async Task ReadyAsync()
-    {
-        Console.WriteLine($"{_client.CurrentUser} is connected!");
-
-        _client.SetActivityAsync(new Game("이슈 수집 중..."));
-
-        var issueTagChoices = new SlashCommandOptionBuilder()
-            .WithName("tags")
-            .WithDescription("이슈 태그")
-            .WithType(ApplicationCommandOptionType.String);
-        foreach (var tag in Enum.GetNames(typeof(IssueTag)))
-        {
-            issueTagChoices.AddChoice(tag, tag.ToLowerInvariant());
-        }
-
-        var issueStatusChoices1 = new SlashCommandOptionBuilder()
-            .WithDescription("이슈 상태 선택")
-            .WithType(ApplicationCommandOptionType.String);
-        var issueStatusChoices2 = new SlashCommandOptionBuilder()
-            .WithDescription("이슈 상태 선택")
-            .WithType(ApplicationCommandOptionType.String);
-
-        foreach (var status in Enum.GetNames(typeof(IssueStatus)))
-        {
-            issueStatusChoices1.AddChoice(status, status.ToLowerInvariant());
-            issueStatusChoices2.AddChoice(status, status.ToLowerInvariant());
-        }
-
-        var newIssue = new SlashCommandBuilder()
-            .WithName("issue")
-            .WithDescription("Root of issue commands")
-            //.AddOptions(new SlashCommandOptionBuilder())
-            .WithNameLocalizations(new Dictionary<string, string>
-            {
-                { "ko", "이슈" }
-            })
-            .WithDescriptionLocalizations(new Dictionary<string, string>
-            {
-                { "ko", "이슈 명령어 최상위 식별자(?)" }
-            })
-            //get
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("get")
-                .WithDescription("ID로 이슈 조회")
-                .AddOption(new SlashCommandOptionBuilder() // get (int issueId)
-                    .WithName("id")
-                    .WithDescription("이슈 ID")
-                    .WithRequired(true)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            //new
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("new")
-                .WithDescription("새 이슈 생성")
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            // status
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("set-status")
-                .WithDescription("상태 설정")
-                .AddOption(new SlashCommandOptionBuilder() // status(int issueId)
-                    .WithName("id")
-                    .WithDescription("이슈 ID")
-                    .WithRequired(true)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .AddOption(issueStatusChoices1.WithName("change-to").WithRequired(true))
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            // list
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("list")
-                .WithDescription("이슈 목록")
-                .AddOption(issueTagChoices) // list (<enum> Tag tag).WithType(ApplicationCommandOptionType.Boolean))
-                .AddOption(issueStatusChoices2.WithName("status").WithRequired(false))
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("export")
-                .WithDescription("이슈 내보내기")
-                .AddOption(issueTagChoices.WithRequired(false))
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("delete")
-                .WithDescription("이슈 삭제")
-                .AddOption(new SlashCommandOptionBuilder()
-                    .WithName("id")
-                    .WithDescription("이슈 ID")
-                    .WithRequired(true)
-                    .WithType(ApplicationCommandOptionType.Integer))
-                .WithType(ApplicationCommandOptionType.SubCommand))
-            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
-
-        var ping = new SlashCommandBuilder()
-            .WithName("ping")
-            .WithDescription("Pong!")
-            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
-
-        var zakonim = new SlashCommandBuilder()
-            .WithName("zakonim")
-            .WithDescription("Hello zako!")
-            .WithNameLocalizations(new Dictionary<string, string>{{"ko", "자코님"}})
-            .WithDescriptionLocalizations(new Dictionary<string, string>{{"ko", "허접님"}})
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("who")
-                .WithDescription("who is zako")
-                .WithNameLocalizations(new Dictionary<string, string> {{"ko", "누가"}})
-                .WithDescriptionLocalizations(new Dictionary<string, string>{{"ko", "누가 허접인가"}})
-                .WithRequired(true)
-                .WithType(ApplicationCommandOptionType.User))
-            .AddOption(new SlashCommandOptionBuilder()
-                .WithName("description")
-                .WithDescription("zakonim!")
-                .WithNameLocalizations(new Dictionary<string, string>{{"ko", "설명"}})
-                .WithRequired(true)
-                .WithType(ApplicationCommandOptionType.String))
-            .WithContextTypes(new[] {InteractionContextType.PrivateChannel,InteractionContextType.BotDm,InteractionContextType.Guild}).Build();
-        
-        await _client.CreateGlobalApplicationCommandAsync(newIssue);
-        await _client.CreateGlobalApplicationCommandAsync(ping);
-        await _client.CreateGlobalApplicationCommandAsync(zakonim);
-        
-        
-        
-        
-    }
+    
     
     private static async Task MessageReceivedAsync(SocketMessage message)
     {
@@ -291,6 +169,48 @@ class Program
                     }
                 }   
                     break;
+                case "ISSUE_MODAL_EDIT":
+                {
+                    await modal.RespondAsync("안 돼.", ephemeral: true);
+                    break;
+                    
+                    IssueContent Content = new IssueContent();
+                    
+                    var c = modal.Data.Components.ToArray();
+                    object[] values = new object[c.Length];
+                    for (int i = 0; i < c.Length; i++)
+                        values[i] = c[i].Value ?? "NULL";
+
+                    values[1] = c[1].Values.First();
+                    //Console.WriteLine($"values[1] = {values[1]}");
+
+                    string userId = modal.User.Id.ToString();
+                    
+                    var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록헀습니다.")
+                        .AddField("이슈 이름", values[0])
+                        .AddField("이슈 태그", values[1])
+                        .AddField("이슈 설명", values[2])
+                        .WithColor(Color.Blue)
+                        .WithCurrentTimestamp()
+                        .Build();
+                    bool result;
+                    
+                    
+                    
+                    try
+                    {
+                        //Content = Issue.IssueData.GetIssueByIdAsync();
+                        
+                        result = await Issue.IssueData.UpdateIssueAsync(Content);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        throw;
+                    }
+                    
+                    break;
+                }
                 default:
                     await modal.RespondAsync("Undefined command", ephemeral:true);
                     break;
@@ -301,7 +221,7 @@ class Program
         {
             switch (slashCommand.Data.Name)
             {
-                case "issue":
+                case "issue": 
                     var subCommand = slashCommand.Data.Options.First().Name;
                     switch (subCommand)
                     {
@@ -506,6 +426,62 @@ class Program
                             }
                         }
                             break;
+                        case "edit":
+                        {
+                            int inputId = (int)slashCommand.Data.Options.First(o => o.Name == "id").Value;
+                            var result = Issue.IssueData.GetIssueByIdAsync(inputId).Result;
+                            
+                            // modification permission check
+                            if (result == null || result.Value.Status == IssueStatus.Deleted)
+                            {
+                                var eb = new EmbedBuilder()
+                                    .WithTitle("오류가 발생했습니다")
+                                    .WithDescription("해당 이슈가 없던지 지워졌던지")
+                                    .WithColor(Color.Red)
+                                    .WithCurrentTimestamp();
+                                await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                                break;
+                            }
+
+                            if (result.Value.Status.ToString() != slashCommand.User.Id.ToString()
+                                && !AdminTool.IsAdmin(slashCommand.User.Id.ToString()))
+                            {
+                                var eb = new EmbedBuilder()
+                                    .WithTitle("오류가 발생했습니다")
+                                    .WithDescription("남의 것을 탐하지 마라")
+                                    .WithColor(Color.Red)
+                                    .WithCurrentTimestamp();
+                                await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
+                                break;
+                            }
+
+                            string defaultTag = result.Value.Tag switch
+                            {
+                                IssueTag.Bug => "bug",
+                                IssueTag.Feature => "feature",
+                                IssueTag.Enhancement => "enhancement"
+                            };
+
+                            var eModal = new ModalBuilder()
+                                .WithTitle("이슈 수정 #" + inputId)
+                                .WithCustomId("ISSUE_MODAL_EDIT")
+                                .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,placeholder: "이슈 이름을 입력하세요", required: true)
+                                //.AddTextInput("이슈 Id", "issue_id", value: inputId.ToString(), required: true)
+                                .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
+                                {
+                                    new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")
+                                        .WithDescription("오류가 발생했어요!").WithDefault(defaultTag == "bug"),
+                                    new SelectMenuOptionBuilder().WithLabel("Feature").WithValue("feature")
+                                        .WithDescription("새로운 기능을 제안해요!").WithDefault(defaultTag == "feature"),
+                                    new SelectMenuOptionBuilder().WithLabel("Enhancement").WithValue("enhancement")
+                                        .WithDescription("기존 기능을 개선해요!").WithDefault(defaultTag == "enhancement")
+                                } ,required: true)
+                                .AddTextInput("이슈 설명", "issue_detail",value: result.Value.Detail, placeholder: "이슈 설명을 입력하세요", required: true,
+                                    style: TextInputStyle.Paragraph);
+
+                            await slashCommand.RespondWithModalAsync(eModal.Build());
+                            break;
+                        }
                         default:
                             //await slashCommand.RespondAsync("Unknown command");
                             break;
