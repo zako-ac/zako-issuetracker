@@ -71,15 +71,17 @@ class Program
             issueTagChoices.AddChoice(tag, tag.ToLowerInvariant());
         }
 
-        var issueStatusChoices = new SlashCommandOptionBuilder()
-            //    .WithName("change-to")
+        var issueStatusChoices1 = new SlashCommandOptionBuilder()
             .WithDescription("이슈 상태 선택")
-            //.WithRequired(true)
+            .WithType(ApplicationCommandOptionType.String);
+        var issueStatusChoices2 = new SlashCommandOptionBuilder()
+            .WithDescription("이슈 상태 선택")
             .WithType(ApplicationCommandOptionType.String);
 
         foreach (var status in Enum.GetNames(typeof(IssueStatus)))
         {
-            issueStatusChoices.AddChoice(status, status.ToLowerInvariant());
+            issueStatusChoices1.AddChoice(status, status.ToLowerInvariant());
+            issueStatusChoices2.AddChoice(status, status.ToLowerInvariant());
         }
 
         var newIssue = new SlashCommandBuilder()
@@ -118,14 +120,14 @@ class Program
                     .WithDescription("이슈 ID")
                     .WithRequired(true)
                     .WithType(ApplicationCommandOptionType.Integer))
-                .AddOption(issueStatusChoices.WithName("change-to").WithRequired(true))
+                .AddOption(issueStatusChoices1.WithName("change-to").WithRequired(true))
                 .WithType(ApplicationCommandOptionType.SubCommand))
             // list
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("list")
                 .WithDescription("이슈 목록")
                 .AddOption(issueTagChoices) // list (<enum> Tag tag).WithType(ApplicationCommandOptionType.Boolean))
-                .AddOption(issueStatusChoices.WithName("status").WithRequired(false))
+                .AddOption(issueStatusChoices2.WithName("status").WithRequired(false))
                 .WithType(ApplicationCommandOptionType.SubCommand))
             .AddOption(new SlashCommandOptionBuilder()
                 .WithName("export")
