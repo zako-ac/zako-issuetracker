@@ -119,6 +119,72 @@ partial class Program
 
         if (interaction is SocketModal modal)
         {
+            // WithCustomId("ISSUE_MODAL_EDIT__" + inputId)
+            
+            if(modal.Data.CustomId.StartsWith("ISSUE_MODAL_EDIT__"))
+            {
+                await modal.RespondAsync("안 돼.", ephemeral: true);
+
+                int id = int.Parse(modal.Data.CustomId.Substring("ISSUE_MODAL_EDIT__".Length));
+                
+                
+                
+                var c = modal.Data.Components.ToArray();
+                object[] values = new object[c.Length];
+                for (int i = 0; i < c.Length; i++)
+                    values[i] = c[i].Value ?? "NULL";
+
+                values[1] = c[1].Values.First();
+                //Console.WriteLine($"values[1] = {values[1]}");
+
+                string userId = modal.User.Id.ToString();
+
+                var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록헀습니다.")
+                    .AddField("이슈 이름", values[0])
+                    .AddField("이슈 태그", values[1])
+                    .AddField("이슈 설명", values[2])
+                    .WithColor(Color.Blue)
+                    .WithCurrentTimestamp()
+                    .Build();
+                bool result;
+                
+                IssueJsonContent Content = new IssueJsonContent();
+                IssueContent origin = await IssueData.GetIssueByIdAsync(id) ?? new IssueContent(); // ??
+                try
+                {
+                    Content.Id = id;
+                    Content.Name = values[0].ToString()!;
+                    Content.Detail = values[2].ToString()!;
+                    Content.Tag = Enum.Parse<IssueTag>(values[1].ToString()!, true);
+                    Content.Status = origin.Status;
+                    Content.UserId = origin.UserId;
+                    
+                    result = await IssueData.UpdateIssueAsync(Content);
+                }
+                catch (Exception e)
+                {
+                    result = false;
+                    Console.WriteLine(e);
+                }
+                
+                if (!result)
+                {
+                    var errorEmbed = new EmbedBuilder().WithTitle("이슈 수정을 실패했습니다.")
+                        .WithColor(Color.Red)
+                        .AddField("이슈 이름", values[0])
+                        .AddField("이슈 태그", values[1])
+                        .AddField("이슈 설명", values[2])
+                        .WithCurrentTimestamp()
+                        .Build();
+                    await modal.RespondAsync(embed: errorEmbed, ephemeral: false);
+                }
+                else
+                {
+                    await modal.RespondAsync(embed: embed, ephemeral: false);
+                }
+                
+                
+            }
             switch (modal.Data.CustomId)
             {
                 case "ISSUE_MODAL":
@@ -169,48 +235,6 @@ partial class Program
                     }
                 }   
                     break;
-                case "ISSUE_MODAL_EDIT":
-                {
-                    await modal.RespondAsync("안 돼.", ephemeral: true);
-                    break;
-                    
-                    IssueContent Content = new IssueContent();
-                    
-                    var c = modal.Data.Components.ToArray();
-                    object[] values = new object[c.Length];
-                    for (int i = 0; i < c.Length; i++)
-                        values[i] = c[i].Value ?? "NULL";
-
-                    values[1] = c[1].Values.First();
-                    //Console.WriteLine($"values[1] = {values[1]}");
-
-                    string userId = modal.User.Id.ToString();
-                    
-                    var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록헀습니다.")
-                        .AddField("이슈 이름", values[0])
-                        .AddField("이슈 태그", values[1])
-                        .AddField("이슈 설명", values[2])
-                        .WithColor(Color.Blue)
-                        .WithCurrentTimestamp()
-                        .Build();
-                    bool result;
-                    
-                    
-                    
-                    try
-                    {
-                        //Content = Issue.IssueData.GetIssueByIdAsync();
-                        
-                        result = await Issue.IssueData.UpdateIssueAsync(Content);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
-                    }
-                    
-                    break;
-                }
                 default:
                     await modal.RespondAsync("Undefined command", ephemeral:true);
                     break;
@@ -464,9 +488,9 @@ partial class Program
 
                             var eModal = new ModalBuilder()
                                 .WithTitle("이슈 수정 #" + inputId)
-                                .WithCustomId("ISSUE_MODAL_EDIT")
+                                .WithCustomId("ISSUE_MODAL_EDIT__" + inputId)
                                 .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,placeholder: "이슈 이름을 입력하세요", required: true)
-                                //.AddTextInput("이슈 Id", "issue_id", value: inputId.ToString(), required: true)
+                                .AddTextInput("이슈 Id(수정금지)", "issue_id", value: inputId.ToString(), required: true)
                                 .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
                                 {
                                     new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")

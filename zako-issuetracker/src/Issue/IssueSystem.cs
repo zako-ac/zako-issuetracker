@@ -168,8 +168,15 @@ public class IssueData
         }
     }
 
-    public static async Task<bool> UpdateIssueAsync(IssueContent issueContent)
+    public static async Task<bool> UpdateIssueAsync(IssueJsonContent issueContent)
     {
+        
+        
+        using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath)
+        {
+
+        };
+        
         return true;
     }
     
