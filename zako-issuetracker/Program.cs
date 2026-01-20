@@ -10,14 +10,23 @@ namespace zako_issuetracker;
 
 public enum IssueTag
 {
-    Bug, Feature, Enhancement
+    Bug,
+    Feature,
+    Enhancement
 }
 
 public enum IssueStatus
 {
-    Proposed, Approved, Rejected, Deleted, InProgress, Completed
+    Proposed,
+    Approved,
+    Rejected,
+    Deleted,
+    InProgress,
+
+    Completed
     // 0, 1, 2, 3, 4, 5
 }
+
 partial class Program
 {
     private static DiscordSocketClient _client;
@@ -28,41 +37,42 @@ partial class Program
         string[] adminIds = EnvLoader.GetAdminIds();
         if (adminIds == Array.Empty<string>())
             throw new ArgumentNullException();
-        
+
         var config = new DiscordSocketConfig
         {
             GatewayIntents = GatewayIntents.All
         };
-        
+
         _client = new DiscordSocketClient(config);
-        
+
         _client.Log += LogAsync;
         _client.Ready += ReadyAsync;
         _client.MessageReceived += MessageReceivedAsync;
         _client.InteractionCreated += InteractionCreatedAsync;
-        
+
         Startup.StartupCheck();
-        
+
         await _client.LoginAsync(TokenType.Bot, botToken); //or, read from console
-        
+
         await _client.StartAsync();
-        
+
         await Task.Delay(Timeout.Infinite);
     }
-    
+
     private static Task LogAsync(LogMessage log)
     {
         Console.WriteLine(log.ToString());
         return Task.CompletedTask;
     }
-    
-    
+
+
     private static async Task MessageReceivedAsync(SocketMessage message)
     {
         // The bot should never respond to itself.
         if (message.Author.Id == _client.CurrentUser.Id)
             return;
     }
+
     private static async Task InteractionCreatedAsync(SocketInteraction interaction)
     {
         // safety-casting is the best way to prevent something being cast from being null.
@@ -78,20 +88,20 @@ partial class Program
                     tag = Enum.Parse<IssueTag>(component.Message.Embeds.First().Description.Split().Last(), true);
                 else
                     tag = null;
-                
+
                 if (currentPage <= 1)
                 {
                     await component.RespondAsync("첫 페이지입니다!", ephemeral: true);
                     return;
                 }
-                
+
                 Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
                 await component.UpdateAsync(msg =>
-                    { 
-                        msg.Embeds = commands.IssueListEmbed.BuildIssueListEmbed(dict,--currentPage, tag);
-                    });
-
-            }else if (component.Data.CustomId == "issue-next")
+                {
+                    msg.Embeds = commands.IssueListEmbed.BuildIssueListEmbed(dict, --currentPage, tag);
+                });
+            }
+            else if (component.Data.CustomId == "issue-next")
             {
                 int currentPage = int.Parse(component.Message.Embeds.First().Title.Split().Last());
 
@@ -100,7 +110,7 @@ partial class Program
                     tag = Enum.Parse<IssueTag>(component.Message.Embeds.First().Description.Split().Last(), true);
                 else
                     tag = null;
-                
+
                 Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
                 int maxPage = (int)Math.Ceiling((double)dict.Count / EnvLoader.GetPageSize());
                 if (currentPage >= maxPage)
@@ -113,22 +123,20 @@ partial class Program
                 {
                     msg.Embeds = commands.IssueListEmbed.BuildIssueListEmbed(dict, ++currentPage, tag);
                 });
-            }else
+            }
+            else
                 Console.WriteLine("An ID has been received that has no handler!");
         }
 
         if (interaction is SocketModal modal)
         {
             // WithCustomId("ISSUE_MODAL_EDIT__" + inputId)
-            
-            if(modal.Data.CustomId.StartsWith("ISSUE_MODAL_EDIT__"))
-            {
-                await modal.RespondAsync("안 돼.", ephemeral: true);
 
+            if (modal.Data.CustomId.StartsWith("ISSUE_MODAL_EDIT__"))
+            {
                 int id = int.Parse(modal.Data.CustomId.Substring("ISSUE_MODAL_EDIT__".Length));
-                
-                
-                
+
+
                 var c = modal.Data.Components.ToArray();
                 object[] values = new object[c.Length];
                 for (int i = 0; i < c.Length; i++)
@@ -147,9 +155,9 @@ partial class Program
                     .WithCurrentTimestamp()
                     .Build();
                 bool result;
-                
+
                 IssueJsonContent Content = new IssueJsonContent();
-                IssueContent origin = await IssueData.GetIssueByIdAsync(id) ?? new IssueContent(); // ??
+                IssueContent origin = await IssueData.GetIssueByIdAsync(id) ?? throw new ArgumentNullException(); // ??
                 try
                 {
                     Content.Id = id;
@@ -158,7 +166,7 @@ partial class Program
                     Content.Tag = Enum.Parse<IssueTag>(values[1].ToString()!, true);
                     Content.Status = origin.Status;
                     Content.UserId = origin.UserId;
-                    
+
                     result = await IssueData.UpdateIssueAsync(Content);
                 }
                 catch (Exception e)
@@ -166,7 +174,7 @@ partial class Program
                     result = false;
                     Console.WriteLine(e);
                 }
-                
+
                 if (!result)
                 {
                     var errorEmbed = new EmbedBuilder().WithTitle("이슈 수정을 실패했습니다.")
@@ -182,9 +190,8 @@ partial class Program
                 {
                     await modal.RespondAsync(embed: embed, ephemeral: false);
                 }
-                
-                
             }
+
             switch (modal.Data.CustomId)
             {
                 case "ISSUE_MODAL":
@@ -198,7 +205,7 @@ partial class Program
                     //Console.WriteLine($"values[1] = {values[1]}");
 
                     string userId = modal.User.Id.ToString();
-                    
+
                     var embed = new EmbedBuilder().WithTitle("이슈를 DB에 등록했습니다.")
                         .AddField("이슈 이름", values[0])
                         .AddField("이슈 태그", values[1])
@@ -209,7 +216,7 @@ partial class Program
                     bool result;
                     try
                     {
-                         result = await Issue.IssueData.StoreIssueAsync(values[0].ToString(), values[2].ToString(),
+                        result = await Issue.IssueData.StoreIssueAsync(values[0].ToString(), values[2].ToString(),
                             Enum.Parse<IssueTag>(values[1].ToString(), true), userId);
                     }
                     catch (Exception e)
@@ -217,7 +224,7 @@ partial class Program
                         result = false;
                         Console.Error.WriteLine(e.Message);
                     }
-                    
+
                     if (!result)
                     {
                         var errorEmbed = new EmbedBuilder().WithTitle("이슈 등록에 실패했습니다.")
@@ -233,10 +240,10 @@ partial class Program
                     {
                         await modal.RespondAsync(embed: embed, ephemeral: false);
                     }
-                }   
+                }
                     break;
                 default:
-                    await modal.RespondAsync("Undefined command", ephemeral:true);
+                    await modal.RespondAsync("Undefined command", ephemeral: true);
                     break;
             }
         }
@@ -245,7 +252,7 @@ partial class Program
         {
             switch (slashCommand.Data.Name)
             {
-                case "issue": 
+                case "issue":
                     var subCommand = slashCommand.Data.Options.First().Name;
                     switch (subCommand)
                     {
@@ -253,15 +260,19 @@ partial class Program
                             var inModal = new ModalBuilder()
                                 .WithTitle("새 이슈")
                                 .WithCustomId("ISSUE_MODAL")
-                                .AddTextInput("이슈 이름", "issue_title", placeholder:"이슈 이름을 입력하세요", required:true)
-                                .AddSelectMenu("이슈 태그", "issue_tag", options:new List<SelectMenuOptionBuilder>
+                                .AddTextInput("이슈 이름", "issue_title", placeholder: "이슈 이름을 입력하세요", required: true)
+                                .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
                                 {
-                                    new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug").WithDescription("오류가 발생했어요!")
-                                    ,new SelectMenuOptionBuilder().WithLabel("Feature").WithValue("feature").WithDescription("새로운 기능을 제안해요!")
-                                    ,new SelectMenuOptionBuilder().WithLabel("Enhancement").WithValue("enhancement").WithDescription("기존 기능을 개선해요!")
-                                }, required:true)
-                                .AddTextInput("이슈 설명", "issue_detail", placeholder:"이슈 설명을 입력하세요", required:true, style: TextInputStyle.Paragraph);
-                                
+                                    new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")
+                                        .WithDescription("오류가 발생했어요!"),
+                                    new SelectMenuOptionBuilder().WithLabel("Feature").WithValue("feature")
+                                        .WithDescription("새로운 기능을 제안해요!"),
+                                    new SelectMenuOptionBuilder().WithLabel("Enhancement").WithValue("enhancement")
+                                        .WithDescription("기존 기능을 개선해요!")
+                                }, required: true)
+                                .AddTextInput("이슈 설명", "issue_detail", placeholder: "이슈 설명을 입력하세요", required: true,
+                                    style: TextInputStyle.Paragraph);
+
                             await slashCommand.RespondWithModalAsync(inModal.Build());
                             break;
                         case "set-status":
@@ -277,7 +288,7 @@ partial class Program
                                 await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
                                 break;
                             }
-                            
+
                             var issueId = (long)slashCommand.Data.Options.First().Options
                                 .First(o => o.Name == "id").Value;
                             var newStatusStr = (string)slashCommand.Data.Options.First().Options
@@ -318,17 +329,18 @@ partial class Program
                             break;
                         case "list":
                         {
-                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value?.ToString();
+                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value
+                                ?.ToString();
                             IssueTag? tag = null;
                             if (!string.IsNullOrEmpty(tagStr))
                                 tag = Enum.Parse<IssueTag>(tagStr, true);
-                            
+
                             string? statusStr = slashCommand.Data.Options.First().Options
                                 .FirstOrDefault(o => o.Name == "status")?.Value?.ToString();
                             IssueStatus? status = null;
                             if (!string.IsNullOrEmpty(statusStr))
                                 status = Enum.Parse<IssueStatus>(statusStr, true);
-                            
+
                             Dictionary<int, Issue.IssueContent> dict = await Issue.IssueData.ListOfIssueAsync(tag);
 
                             if (dict.Count == 0)
@@ -342,15 +354,16 @@ partial class Program
                                 await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
                                 break;
                             }
-                            
+
                             await slashCommand.RespondAsync
-                                (embeds: commands.IssueListEmbed.BuildIssueListEmbed(dict,1 , tag, status),
-                                    components: components.Pages.Button().Build(), ephemeral: false);
+                            (embeds: commands.IssueListEmbed.BuildIssueListEmbed(dict, 1, tag, status),
+                                components: components.Pages.Button().Build(), ephemeral: false);
                         }
                             break;
                         case "export":
                         {
-                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value?.ToString();
+                            string? tagStr = slashCommand.Data.Options.First().Options.FirstOrDefault()?.Value
+                                ?.ToString();
                             IssueTag? tag = null;
                             if (!string.IsNullOrEmpty(tagStr))
                                 tag = Enum.Parse<IssueTag>(tagStr, true);
@@ -372,14 +385,14 @@ partial class Program
 
                             var options = new JsonSerializerOptions
                             {
-                                WriteIndented = true,IncludeFields = true,
+                                WriteIndented = true, IncludeFields = true,
                                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                                 Converters = { new JsonStringEnumConverter() }
                             };
                             string finalJson = JsonSerializer.Serialize(jsonList, options);
-                            
+
                             string msg = "```json\n" + finalJson + "\n```";
-                            
+
                             await slashCommand.RespondAsync(msg, ephemeral: true);
                         }
                             break;
@@ -387,7 +400,7 @@ partial class Program
                         {
                             var issueId = (long)slashCommand.Data.Options.First().Options
                                 .First(o => o.Name == "id").Value;
-                            
+
                             var ctx = await Issue.IssueData.GetIssueByIdAsync((int)issueId);
                             if (ctx == null)
                             {
@@ -406,20 +419,21 @@ partial class Program
                                     .AddField("Name", ctx.Value.Name)
                                     .AddField("Issue ID", issueId.ToString(), true)
                                     .AddField("Detail", ctx.Value.Detail, true)
-                                    .AddField("Tag", ctx.Value.Tag.ToString(),true)
-                                    .AddField("Status", ctx.Value.Status.ToString(),true)
+                                    .AddField("Tag", ctx.Value.Tag.ToString(), true)
+                                    .AddField("Status", ctx.Value.Status.ToString(), true)
                                     .AddField("User", $"<@{ctx.Value.UserId}>", true)
                                     .WithColor(Color.Blue)
                                     .WithCurrentTimestamp();
-                                
+
                                 await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
                             }
                         }
                             break;
                         case "delete":
                         {
-                            int Id = (int)(long)slashCommand.Data.Options.First().Options.First(o => o.Name == "id").Value;
-    
+                            int Id = (int)(long)slashCommand.Data.Options.First().Options.First(o => o.Name == "id")
+                                .Value;
+
                             bool result;
                             try
                             {
@@ -454,7 +468,7 @@ partial class Program
                         {
                             int inputId = (int)slashCommand.Data.Options.First(o => o.Name == "id").Value;
                             var result = Issue.IssueData.GetIssueByIdAsync(inputId).Result;
-                            
+
                             // modification permission check
                             if (result == null || result.Value.Status == IssueStatus.Deleted)
                             {
@@ -489,8 +503,9 @@ partial class Program
                             var eModal = new ModalBuilder()
                                 .WithTitle("이슈 수정 #" + inputId)
                                 .WithCustomId("ISSUE_MODAL_EDIT__" + inputId)
-                                .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,placeholder: "이슈 이름을 입력하세요", required: true)
-                                .AddTextInput("이슈 Id(수정금지)", "issue_id", value: inputId.ToString(), required: true)
+                                .AddTextInput("이슈 이름", "issue_title", value: result.Value.Name,
+                                    placeholder: "이슈 이름을 입력하세요", required: true)
+                                //.AddTextInput("이슈 Id(수정금지)", "issue_id", value: inputId.ToString(), required: true)
                                 .AddSelectMenu("이슈 태그", "issue_tag", options: new List<SelectMenuOptionBuilder>
                                 {
                                     new SelectMenuOptionBuilder().WithLabel("Bug").WithValue("bug")
@@ -499,8 +514,9 @@ partial class Program
                                         .WithDescription("새로운 기능을 제안해요!").WithDefault(defaultTag == "feature"),
                                     new SelectMenuOptionBuilder().WithLabel("Enhancement").WithValue("enhancement")
                                         .WithDescription("기존 기능을 개선해요!").WithDefault(defaultTag == "enhancement")
-                                } ,required: true)
-                                .AddTextInput("이슈 설명", "issue_detail",value: result.Value.Detail, placeholder: "이슈 설명을 입력하세요", required: true,
+                                }, required: true)
+                                .AddTextInput("이슈 설명", "issue_detail", value: result.Value.Detail,
+                                    placeholder: "이슈 설명을 입력하세요", required: true,
                                     style: TextInputStyle.Paragraph);
 
                             await slashCommand.RespondWithModalAsync(eModal.Build());
@@ -510,6 +526,7 @@ partial class Program
                             //await slashCommand.RespondAsync("Unknown command");
                             break;
                     }
+
                     break;
                 case "ping":
                     await slashCommand.RespondAsync($"Pong! {_client.Latency}");
@@ -517,7 +534,9 @@ partial class Program
                 case "zakonim":
                 {
                     SocketUser who = (SocketUser)slashCommand.Data.Options.First(o => o.Name == "who").Value;
-                    string description = slashCommand.Data.Options.First(o => o.Name == "description").Value.ToString() ?? "No description";
+                    string description =
+                        slashCommand.Data.Options.First(o => o.Name == "description").Value.ToString() ??
+                        "No description";
 
                     using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
                     con.Open();
@@ -528,15 +547,16 @@ partial class Program
                         cmd.Parameters.AddWithValue("@id", who.Id.ToString());
                         cmd.Parameters.AddWithValue("@description", description);
                         await cmd.ExecuteNonQueryAsync();
-                        
+
                         cmd.CommandText = "SELECT COUNT(*) FROM zakonim";
                         await using var reader = await cmd.ExecuteReaderAsync();
-                        
+
                         int count = 0;
                         if (await reader.ReadAsync())
                         {
                             count = reader.GetInt32(0);
                         }
+
                         var eb = new EmbedBuilder()
                             .WithTitle("자코는 봇이에요!")
                             .WithDescription($"{who.Mention}님은 {count}번째로 자코를 사람으로 오해하셨습니다.")
@@ -546,9 +566,9 @@ partial class Program
                     catch (SqliteException e)
                     {
                         int code = e.SqliteErrorCode;
-                        
+
                         var eb = new EmbedBuilder();
-                        if(code == 19) // UNIQUE constraint failed
+                        if (code == 19) // UNIQUE constraint failed
                         {
                             eb = new EmbedBuilder()
                                 .WithTitle("이미 허접입니다")
@@ -567,7 +587,7 @@ partial class Program
                                 .WithCurrentTimestamp();
                             await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: false);
                         }
-                        
+
                         Console.Error.WriteLine(e);
                     }
                     catch (Exception e)
@@ -577,9 +597,9 @@ partial class Program
                             .WithDescription("오류남")
                             .WithColor(Color.Red)
                             .WithCurrentTimestamp();
-                        
-                        await slashCommand.RespondAsync(embed:eb.Build(), ephemeral: true);
-                        
+
+                        await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
+
                         Console.Error.WriteLine(e);
                     }
                     finally
