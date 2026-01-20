@@ -181,7 +181,7 @@ public class IssueData
             cmd.Parameters.AddWithValue("@name", issueContent.Name);
             cmd.Parameters.AddWithValue("@detail", issueContent.Detail);
             cmd.Parameters.AddWithValue("@tag", issueContent.Tag.ToString());
-            await cmd.ExecuteNonQueryAsync();
+            return await cmd.ExecuteNonQueryAsync() > 0;
         }
         catch (Exception e)
         {

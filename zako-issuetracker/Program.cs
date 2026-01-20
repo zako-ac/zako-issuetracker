@@ -147,7 +147,7 @@ partial class Program
 
                 string userId = modal.User.Id.ToString();
 
-                var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록헀습니다.")
+                var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록했습니다.")
                     .AddField("이슈 이름", values[0])
                     .AddField("이슈 태그", values[1])
                     .AddField("이슈 설명", values[2])
