@@ -188,7 +188,6 @@ public class IssueData
             Console.Error.WriteLine(e);
             return false;
         }
-        return true;
     }
     
     #region ["Obsolete Sync Wrappers"]

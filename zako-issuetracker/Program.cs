@@ -136,7 +136,6 @@ partial class Program
             {
                 int id = int.Parse(modal.Data.CustomId.Substring("ISSUE_MODAL_EDIT__".Length));
 
-
                 var c = modal.Data.Components.ToArray();
                 object[] values = new object[c.Length];
                 for (int i = 0; i < c.Length; i++)
@@ -469,7 +468,7 @@ partial class Program
                         case "edit":
                         {
                             int inputId = (int)slashCommand.Data.Options.First(o => o.Name == "id").Value;
-                            var result = Issue.IssueData.GetIssueByIdAsync(inputId).Result;
+                            var result = await Issue.IssueData.GetIssueByIdAsync(inputId);
 
                             // modification permission check
                             if (result == null || result.Value.Status == IssueStatus.Deleted)
