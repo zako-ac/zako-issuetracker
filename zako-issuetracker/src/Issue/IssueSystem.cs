@@ -170,13 +170,24 @@ public class IssueData
 
     public static async Task<bool> UpdateIssueAsync(IssueJsonContent issueContent)
     {
-        
-        
-        using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath)
+        try
         {
+            await using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
+            await con.OpenAsync();
 
-        };
-        
+            await using var cmd = con.CreateCommand();
+            cmd.CommandText = "UPDATE zako SET name = @name, detail = @detail, tag = @tag WHERE id = @id";
+            cmd.Parameters.AddWithValue("@id", issueContent.Id);
+            cmd.Parameters.AddWithValue("@name", issueContent.Name);
+            cmd.Parameters.AddWithValue("@detail", issueContent.Detail);
+            cmd.Parameters.AddWithValue("@tag", issueContent.Tag.ToString());
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e);
+            return false;
+        }
         return true;
     }
     
