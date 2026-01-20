@@ -243,6 +243,8 @@ partial class Program
                 }
                     break;
                 default:
+                    if (modal.Data.CustomId.StartsWith("ISSUE_MODAL_EDIT__"))
+                        break;
                     await modal.RespondAsync("Undefined command", ephemeral: true);
                     break;
             }
