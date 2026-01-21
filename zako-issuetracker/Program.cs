@@ -144,8 +144,6 @@ partial class Program
                 values[1] = c[1].Values.First();
                 //Console.WriteLine($"values[1] = {values[1]}");
 
-                string userId = modal.User.Id.ToString();
-
                 var embed = new EmbedBuilder().WithTitle("수정된 이슈를 DB에 등록했습니다.")
                     .AddField("이슈 이름", values[0])
                     .AddField("이슈 태그", values[1])
@@ -171,7 +169,7 @@ partial class Program
                 catch (Exception e)
                 {
                     result = false;
-                    Console.WriteLine(e);
+                    Console.Error.WriteLine(e);
                 }
 
                 if (!result)
