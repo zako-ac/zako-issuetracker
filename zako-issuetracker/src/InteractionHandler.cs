@@ -564,7 +564,7 @@ partial class Program
 
                     await using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
                     con.Open();
-                    var cmd = con.CreateCommand();
+                    await using var cmd = con.CreateCommand();
                     try
                     {
                         cmd.CommandText = "INSERT INTO zakonim (id, description) VALUES (@id, @description)";
@@ -625,10 +625,6 @@ partial class Program
                         await slashCommand.RespondAsync(embed: eb.Build(), ephemeral: true);
 
                         Console.Error.WriteLine(e);
-                    }
-                    finally
-                    {
-                        con.Close();
                     }
                 }
                     break;

@@ -26,6 +26,10 @@ public static class GitHubPoller
         return client;
     }
 
+    private static readonly CancellationTokenSource _cts = new();
+
+    public static void Stop() => _cts.Cancel();
+
     public static async Task StartAsync()
     {
         string? repo = EnvLoader.GetGitHubRepo();
@@ -43,7 +47,7 @@ public static class GitHubPoller
 
         Console.WriteLine($"[GitHub] Polling {repo} every {intervalMs / 1000}s (authenticated: {authenticated})");
 
-        while (true)
+        while (!_cts.Token.IsCancellationRequested)
         {
             try
             {
@@ -54,7 +58,14 @@ public static class GitHubPoller
                 Console.Error.WriteLine($"[GitHub] Poll error: {e}");
             }
 
-            await Task.Delay(intervalMs);
+            try
+            {
+                await Task.Delay(intervalMs, _cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
         }
     }
 

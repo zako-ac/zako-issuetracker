@@ -32,9 +32,9 @@ public static class Startup
             throw;
         }
         
-        var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
+        using var con = new SqliteConnection("Data Source=" + DataBaseHelper.dbPath);
         con.Open();
-        var cmd = con.CreateCommand();
+        using var cmd = con.CreateCommand();
         cmd.CommandText = "CREATE TABLE IF NOT EXISTS zako(id INTEGER PRIMARY KEY AUTOINCREMENT, tag INTEGER NOT NULL, status INTEGER NOT NULL, name TEXT NOT NULL, detail text NOT NULL, discord text NOT NULL)";
         cmd.ExecuteNonQuery();
         cmd.CommandText = "CREATE TABLE IF NOT EXISTS zakonim(id TEXT PRIMARY KEY NOT NULL, description TEXT NOT NULL)";
@@ -51,6 +51,5 @@ public static class Startup
             html_url TEXT NOT NULL,
             UNIQUE(github_number))";
         cmd.ExecuteNonQuery();
-        con.Close();
     }
 }
